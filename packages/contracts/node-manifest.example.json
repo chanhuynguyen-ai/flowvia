@@ -1,0 +1,93 @@
+{
+  "type": "hr.evaluate",
+  "version": 1,
+  "label": "Đánh giá đơn ứng tuyển",
+  "category": "business.hr",
+  "effect": "ai",
+  "required_permissions": [
+    "hr.read",
+    "hr.review"
+  ],
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "application_ref"
+    ],
+    "properties": {
+      "application_ref": {
+        "type": "string"
+      },
+      "extraction_ref": {
+        "type": "string"
+      }
+    }
+  },
+  "config_schema": {
+    "type": "object",
+    "required": [
+      "criteria_version_ref"
+    ],
+    "properties": {
+      "criteria_version_ref": {
+        "type": "string"
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "application_ref",
+      "classification",
+      "evidence"
+    ],
+    "properties": {
+      "application_ref": {
+        "type": "string"
+      },
+      "classification": {
+        "enum": [
+          "suitable",
+          "needs_information",
+          "not_yet_qualified"
+        ]
+      },
+      "evidence": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "criterion",
+            "source_ref",
+            "explanation"
+          ],
+          "properties": {
+            "criterion": {
+              "type": "string"
+            },
+            "source_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "explanation": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ports": [
+    "success",
+    "error"
+  ],
+  "execution": {
+    "timeout_seconds": 120,
+    "max_attempts": 2,
+    "retry_on": [
+      "provider_unavailable"
+    ],
+    "on_invalid_output": "human_review"
+  }
+}

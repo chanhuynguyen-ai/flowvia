@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "name": "HR intake — minh họa module low-code",
+  "description": "Bản cấu hình thiết kế, chưa executable: dependency handler/credential/demo fixtures chưa được triển khai. Duplicate true kết thúc; approval rejected/expired kết thúc; lỗi node theo policy chuyển needs_review. Email dùng snapshot đã duyệt.",
+  "nodes": [
+    {
+      "id": "intake",
+      "type": "trigger.manual",
+      "version": 1,
+      "config": {
+        "sample_payload": {
+          "file_ref": "demo-file-001",
+          "job_ref": "demo-job-001",
+          "email": "candidate@example.invalid",
+          "source_event_id": "demo-event-001"
+        }
+      },
+      "inputs": {}
+    },
+    {
+      "id": "normalize",
+      "type": "data.normalize",
+      "version": 1,
+      "config": {},
+      "inputs": {
+        "payload": {
+          "node": "intake",
+          "path": "payload"
+        }
+      }
+    },
+    {
+      "id": "dedup",
+      "type": "data.deduplicate",
+      "version": 1,
+      "config": {
+        "scope": "source_event"
+      },
+      "inputs": {
+        "payload": {
+          "node": "normalize",
+          "path": "payload"
+        }
+      }
+    },
+    {
+      "id": "is_duplicate",
+      "type": "logic.if",
+      "version": 1,
+      "config": {
+        "operator": "equals",
+        "expected": true
+      },
+      "inputs": {
+        "value": {
+          "node": "dedup",
+          "path": "duplicate"
+        }
+      }
+    },
+    {
+      "id": "application",
+      "type": "hr.application.upsert",
+      "version": 1,
+      "config": {},
+      "inputs": {
+        "payload": {
+          "node": "normalize",
+          "path": "payload"
+        }
+      }
+    },
+    {
+      "id": "extract",
+      "type": "document.extract",
+      "version": 1,
+      "config": {},
+      "inputs": {
+        "file_ref": {
+          "node": "normalize",
+          "path": "payload.file_ref"
+        }
+      }
+    },
+    {
+      "id": "evaluate",
+      "type": "hr.evaluate",
+      "version": 1,
+      "config": {
+        "criteria_version_ref": "demo-criteria-v1"
+      },
+      "inputs": {
+        "application_ref": {
+          "node": "application",
+          "path": "application_ref"
+        },
+        "extraction_ref": {
+          "node": "extract",
+          "path": "extraction_ref"
+        }
+      }
+    },
+    {
+      "id": "route",
+      "type": "logic.router",
+      "version": 1,
+      "config": {
+        "cases": {
+          "suitable": "suitable",
+          "needs_information": "needs_information"
+        },
+        "default": "review"
+      },
+      "inputs": {
+        "value": {
+          "node": "evaluate",
+          "path": "classification"
+        }
+      }
+    },
+    {
+      "id": "approval",
+      "type": "human.approval",
+      "version": 1,
+      "config": {
+        "scope": "job_reviewer",
+        "snapshot_template_ref": "demo-invitation-v1",
+        "expires_in_hours": 48
+      },
+      "inputs": {
+        "application_ref": {
+          "node": "application",
+          "path": "application_ref"
+        }
+      }
+    },
+    {
+      "id": "send",
+      "type": "action.email",
+      "version": 1,
+      "config": {
+        "send_mode": "approved_snapshot"
+      },
+      "inputs": {
+        "approval_ref": {
+          "node": "approval",
+          "path": "approval_ref"
+        }
+      },
+      "credential_ref": "demo-gmail-connection"
+    },
+    {
+      "id": "review",
+      "type": "hr.review.queue",
+      "version": 1,
+      "config": {
+        "reason": "HR xác minh hoặc yêu cầu bổ sung thông tin"
+      },
+      "inputs": {
+        "assessment": {
+          "node": "evaluate",
+          "path": "classification"
+        },
+        "application_ref": {
+          "node": "application",
+          "path": "application_ref"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "intake",
+      "port": "success",
+      "target": "normalize"
+    },
+    {
+      "source": "normalize",
+      "port": "success",
+      "target": "dedup"
+    },
+    {
+      "source": "dedup",
+      "port": "success",
+      "target": "is_duplicate"
+    },
+    {
+      "source": "is_duplicate",
+      "port": "false",
+      "target": "application"
+    },
+    {
+      "source": "application",
+      "port": "success",
+      "target": "extract"
+    },
+    {
+      "source": "extract",
+      "port": "success",
+      "target": "evaluate"
+    },
+    {
+      "source": "evaluate",
+      "port": "success",
+      "target": "route"
+    },
+    {
+      "source": "route",
+      "port": "suitable",
+      "target": "approval"
+    },
+    {
+      "source": "route",
+      "port": "needs_information",
+      "target": "review"
+    },
+    {
+      "source": "route",
+      "port": "review",
+      "target": "review"
+    },
+    {
+      "source": "approval",
+      "port": "approved",
+      "target": "send"
+    }
+  ]
+}
