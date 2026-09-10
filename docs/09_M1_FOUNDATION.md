@@ -1,5 +1,7 @@
 # M1 Foundation Implementation
 
+> Cập nhật 2026-09-10: trạng thái triển khai hiện tại và các gate còn mở được ghi tại [Lite runtime](11_LITE_RUNTIME.md). Nội dung bên dưới giữ thiết kế/hồ sơ của mốc gốc; không dùng để suy ra tính năng đã hoàn thành. Lite hiện dùng PostgreSQL durable worker, chưa dùng Celery.
+
 ## Scope implemented
 
 M1 converts the review-only blueprint into the first application slice without changing the platform-first boundary.

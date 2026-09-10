@@ -1,5 +1,5 @@
 # registry
 
-Versioned node manifests/handler registration; không hardcode HR.
+Lite 0.3: graph.py cung cấp 8 node type/version, config schemas, port declarations, validator DAG và mapping an toàn. Handler thực nằm ở executions/engine.py. HR manifest vẫn là đặc tả tương lai.
 
-Trạng thái: ranh giới module đã định nghĩa; chưa triển khai source. Dùng service/schema/model/router khi cần; không tạo layer rỗng. Quyền và tenant kiểm tra ở backend/worker. Xem docs/06_BACKEND_DATABASE_AUTH.md.
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

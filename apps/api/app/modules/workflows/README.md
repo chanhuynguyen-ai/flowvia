@@ -1,5 +1,5 @@
 # workflows
 
-Draft, validation, publish và immutable graph versions.
+Lite 0.3: lưu draft có revision, validate graph, publish immutable version, enqueue idempotent run. Router hiện gom các API workspace của Lite; service kiểm tra tenant và quyền ở cả API/worker.
 
-Trạng thái: ranh giới module đã định nghĩa; chưa triển khai source. Dùng service/schema/model/router khi cần; không tạo layer rỗng. Quyền và tenant kiểm tra ở backend/worker. Xem docs/06_BACKEND_DATABASE_AUTH.md.
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

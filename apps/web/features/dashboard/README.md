@@ -1,5 +1,5 @@
 # dashboard
 
-M1 implements the authenticated workspace overview shell. It intentionally shows implementation-state cards rather than invented operational metrics.
+Lite 0.3: thống kê SQL của workspace về tin hôm nay, workflow, lượt chạy và approval; hiển thị đúng dữ liệu DB. Không tạo operational metrics giả; HR/booking chưa triển khai.
 
-Business dashboard metrics (messages/candidates/applications/CV/approvals/errors/bookings) remain later milestones and must reconcile to canonical domain state before being displayed. See `docs/05_UI_UX_GUIDE.md` and `docs/09_M1_FOUNDATION.md`.
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

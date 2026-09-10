@@ -1,3 +1,5 @@
 # workflow-runs
 
-Feature ReactJS/TypeScript theo docs/05_UI_UX_GUIDE.md. Chưa triển khai component. Dùng API contract; xử lý loading/empty/error/permission; backend quyết định quyền. Không chứa secret connector.
+Lite 0.3: run history thật, trạng thái và input/output từng node, duyệt action snapshot hoặc hủy các bước chưa gửi. Tải lại dữ liệu qua WebSocket event và polling.
+
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

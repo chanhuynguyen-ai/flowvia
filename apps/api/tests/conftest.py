@@ -2,23 +2,30 @@ import os
 from pathlib import Path
 import uuid
 
-os.environ["DATABASE_URL"] = "sqlite:///./flowvia_test.db"
+TEST_URL = os.environ.get("FLOWVIA_TEST_DATABASE_URL", "sqlite:///./flowvia_test.db")
+# This suite recreates its schema. Refuse an accidentally supplied application database.
+if not TEST_URL.startswith("sqlite") and not TEST_URL.rsplit("/", 1)[-1].endswith(
+    ("_test", "_ci")
+):
+    raise RuntimeError(
+        "FLOWVIA_TEST_DATABASE_URL must use a dedicated database ending in _test or _ci"
+    )
+os.environ["DATABASE_URL"] = TEST_URL
 os.environ["SESSION_COOKIE_SECURE"] = "false"
 os.environ["SESSION_TTL_HOURS"] = "12"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.database import Base, get_db
+from app.core.database import Base, get_db, _make_engine
 from app.main import app
 from app.modules.executions import models as execution_models  # noqa: F401
 from app.modules.identity.models import Membership, Tenant, User
 from app.modules.identity.security import hash_password
 
 TEST_DB = Path("flowvia_test.db")
-engine = create_engine("sqlite:///./flowvia_test.db", connect_args={"check_same_thread": False})
+engine = _make_engine(TEST_URL)
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
@@ -63,13 +70,24 @@ def _seed(db: Session) -> dict[str, uuid.UUID]:
     db.flush()
     db.add_all(
         [
-            Membership(tenant_id=personal.id, user_id=owner.id, role="owner", status="active"),
-            Membership(tenant_id=team.id, user_id=owner.id, role="owner", status="active"),
-            Membership(tenant_id=foreign.id, user_id=reviewer.id, role="owner", status="active"),
+            Membership(
+                tenant_id=personal.id, user_id=owner.id, role="owner", status="active"
+            ),
+            Membership(
+                tenant_id=team.id, user_id=owner.id, role="owner", status="active"
+            ),
+            Membership(
+                tenant_id=foreign.id, user_id=reviewer.id, role="owner", status="active"
+            ),
         ]
     )
     db.commit()
-    return {"owner": owner.id, "personal": personal.id, "team": team.id, "foreign": foreign.id}
+    return {
+        "owner": owner.id,
+        "personal": personal.id,
+        "team": team.id,
+        "foreign": foreign.id,
+    }
 
 
 @pytest.fixture
@@ -94,5 +112,6 @@ def client(db):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    if TEST_DB.exists():
+    engine.dispose()
+    if TEST_URL.startswith("sqlite") and TEST_DB.exists():
         TEST_DB.unlink()
