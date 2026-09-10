@@ -7,6 +7,9 @@ from app.core.config import get_settings
 from app.core.database import Base
 from app.modules.executions import models as execution_models  # noqa: F401
 from app.modules.identity import models as identity_models  # noqa: F401
+from app.modules.connections import models as credential_models  # noqa: F401
+from app.modules.workflows import models as workflow_models  # noqa: F401
+from app.modules.lite import models as lite_models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -36,7 +39,12 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            render_as_batch=True,
+        )
         with context.begin_transaction():
             context.run_migrations()
 

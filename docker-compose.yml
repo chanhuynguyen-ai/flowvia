@@ -1,3 +1,4 @@
+# Local development. PostgreSQL is the durable Lite workflow queue.
 services:
   postgres:
     image: postgres:17-alpine
@@ -13,18 +14,69 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  api:
+    build:
+      context: ./apps/api
+    env_file: .env
+    environment: &app-environment
+      DATABASE_URL: postgresql+psycopg://user:password@postgres:5432/flowvia
+      CREDENTIAL_KEY_FILE: /app/.data/credential.key
+    volumes:
+      - credential_data:/app/.data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      start_period: 20s
+      retries: 20
+
+  worker:
+    build:
+      context: ./apps/api
+    command: ["python", "-m", "app.worker"]
+    env_file: .env
+    environment: *app-environment
+    volumes:
+      - credential_data:/app/.data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,time; assert time.time()-os.path.getmtime('/tmp/flowvia-worker.heartbeat') < 120"]
+      interval: 10s
+      timeout: 3s
+      retries: 18
+
+  web:
+    build:
+      context: ./apps/web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Reserved for file intake and later queue adapters; unused by the Lite runtime.
   redis:
     image: redis:7-alpine
+    profiles: [extras]
     ports:
       - "127.0.0.1:6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
 
   minio:
     image: minio/minio:latest
+    profiles: [extras]
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${OBJECT_STORAGE_ACCESS_KEY:-change_me}
@@ -35,43 +87,7 @@ services:
     volumes:
       - minio_data:/data
 
-  api:
-    build:
-      context: ./apps/api
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql+psycopg://user:password@postgres:5432/flowvia
-      REDIS_URL: redis://redis:6379/0
-      OBJECT_STORAGE_ENDPOINT: http://minio:9000
-      SESSION_COOKIE_SECURE: "false"
-      SEED_DEMO_DATA: "true"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "127.0.0.1:8000:8000"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)",
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  web:
-    build:
-      context: ./apps/web
-    depends_on:
-      api:
-        condition: service_healthy
-    ports:
-      - "127.0.0.1:3000:80"
-
 volumes:
   postgres_data:
+  credential_data:
   minio_data:

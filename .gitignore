@@ -13,3 +13,8 @@ coverage/
 *.log
 *.db
 apps/api/flowvia_test.db
+
+.data/
+.sites-runtime/
+*.db-wal
+*.db-shm

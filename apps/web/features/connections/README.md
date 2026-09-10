@@ -1,3 +1,5 @@
 # connections
 
-Feature ReactJS/TypeScript theo docs/05_UI_UX_GUIDE.md. Chưa triển khai component. Dùng API contract; xử lý loading/empty/error/permission; backend quyết định quyền. Không chứa secret connector.
+Lite 0.3: cấu hình Telegram, lưu/thu hồi credential, kiểm tra bot và đồng bộ tin. Các connector chưa có handler được ghi Planned.
+
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

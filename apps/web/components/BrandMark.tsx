@@ -4,10 +4,11 @@ export function BrandMark() {
       <span className="brand-glyph" aria-hidden="true">
         F
       </span>
-      <span>
+      <span className="brand-copy">
         <strong>Flowvia</strong>
-        <small>Your agents. Your workflows.</small>
+        <small>AI workflow router</small>
       </span>
+      <span className="lite-chip">LITE</span>
     </div>
-  )
+  );
 }

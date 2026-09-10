@@ -12,14 +12,21 @@ from app.core.config import get_settings
 from app.core.database import check_database, get_db
 from app.core.request_context import request_id_var
 from app.modules.identity.router import router as identity_router
+from app.modules.workflows.router import router as workflows_router
+from app.modules.executions.realtime import router as realtime_router
+from app.modules.connections.webhook import router as webhook_router
+from app.modules.lite.router import router as lite_router
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.3.0"
 
 settings = get_settings()
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 app = FastAPI(
     title="Flowvia API",
@@ -38,6 +45,19 @@ app.add_middleware(
 
 @app.middleware("http")
 async def request_context_middleware(request: Request, call_next):
+    if request.method in {"POST", "PATCH", "PUT"}:
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > 1_048_576:
+                return JSONResponse(
+                    status_code=413,
+                    content={
+                        "code": "payload_too_large",
+                        "message": "Request exceeds 1 MB",
+                    },
+                )
+        request._body = bytes(body)
     request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
     token = request_id_var.set(request_id)
     request.state.request_id = request_id
@@ -49,7 +69,9 @@ async def request_context_middleware(request: Request, call_next):
     return response
 
 
-def _error_response(request: Request, status_code: int, code: str, message: str, details=None):
+def _error_response(
+    request: Request, status_code: int, code: str, message: str, details=None
+):
     return JSONResponse(
         status_code=status_code,
         content={
@@ -65,7 +87,9 @@ def _error_response(request: Request, status_code: int, code: str, message: str,
 async def http_exception_handler(request: Request, exc: HTTPException):
     detail = exc.detail
     message = detail if isinstance(detail, str) else "Request failed"
-    return _error_response(request, exc.status_code, f"http_{exc.status_code}", message, detail)
+    return _error_response(
+        request, exc.status_code, f"http_{exc.status_code}", message, detail
+    )
 
 
 @app.exception_handler(RequestValidationError)
@@ -75,7 +99,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         422,
         "validation_error",
         "Request validation failed",
-        exc.errors(),
+        [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()],
     )
 
 
@@ -96,3 +120,7 @@ def ready(db: Session = Depends(get_db)):
 
 
 app.include_router(identity_router, prefix="/api/v1")
+app.include_router(workflows_router, prefix="/api/v1")
+app.include_router(realtime_router, prefix="/api/v1")
+app.include_router(webhook_router, prefix="/api/v1")
+app.include_router(lite_router, prefix="/api/v1")

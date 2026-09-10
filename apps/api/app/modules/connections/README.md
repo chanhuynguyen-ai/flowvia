@@ -1,5 +1,5 @@
 # connections
 
-Credential references, OAuth, verified ingestion, connector health.
+Lite 0.3: encrypted vault, Telegram Bot API text ingress/polling/secret-header webhook, approved delivery, OpenRouter structured response adapter. Chưa có OAuth Gmail/Meta/Zalo hoặc đồng bộ tài khoản Telegram cá nhân. Provider live chưa nghiệm thu bằng tài khoản thật.
 
-Trạng thái: ranh giới module đã định nghĩa; chưa triển khai source. Dùng service/schema/model/router khi cần; không tạo layer rỗng. Quyền và tenant kiểm tra ở backend/worker. Xem docs/06_BACKEND_DATABASE_AUTH.md.
+Xem `docs/11_LITE_RUNTIME.md` ở root repo để biết bằng chứng và gate còn mở.

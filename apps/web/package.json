@@ -1,7 +1,7 @@
 {
   "name": "flowvia-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -10,6 +10,8 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@xyflow/react": "12.11.6",
+    "lucide-react": "1.43.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

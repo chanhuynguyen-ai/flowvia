@@ -1,88 +1,107 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useState } from "react";
 
-import { BrandMark } from '../components/BrandMark'
+import { BrandMark } from "../components/BrandMark";
+import { Icon } from "../components/Icon";
 
 type LoginScreenProps = {
-  busy: boolean
-  error?: string
-  onLogin: (email: string, password: string) => Promise<void>
-}
+  busy: boolean;
+  error?: string;
+  onLogin: (email: string, password: string) => Promise<void>;
+};
 
 export function LoginScreen({ busy, error, onLogin }: LoginScreenProps) {
-  const [email, setEmail] = useState(import.meta.env.DEV ? 'owner@flowvia.local' : '')
-  const [password, setPassword] = useState(import.meta.env.DEV ? 'FlowviaOwner123!' : '')
+  const [email, setEmail] = useState(
+    import.meta.env.DEV ? "owner@flowvia.local" : "",
+  );
+  const [password, setPassword] = useState(
+    import.meta.env.DEV ? "FlowviaOwner123!" : "",
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    await onLogin(email, password)
+    event.preventDefault();
+    await onLogin(email, password);
   }
 
   return (
     <main className="login-page">
       <section className="login-hero" aria-labelledby="login-title">
         <BrandMark />
-        <div>
-          <p className="eyebrow">M1 · Runnable foundation</p>
-          <h1 id="login-title">Xây workflow trước. Tự động hóa sau.</h1>
+        <div className="login-hero-copy">
+          <p className="eyebrow">Omni-channel AI automation</p>
+          <h1 id="login-title">
+            Route conversations.
+            <br />
+            Run agents.
+            <br />
+            <span>Automate the rest.</span>
+          </h1>
           <p>
-            Flowvia giữ lõi workflow độc lập với HR. Bản hiện tại mới cung cấp
-            nền tảng đăng nhập, workspace và shell để chuẩn bị cho canvas bền
-            vững ở M2.
+            Flowvia kết nối message channels với AI agents và low-code workflows
+            trong một workspace.
           </p>
+          <div className="login-flow-preview">
+            <span>
+              <Icon name="telegram" size={16} /> Telegram
+            </span>
+            <Icon name="arrow" size={14} />
+            <span>
+              <Icon name="agents" size={16} /> Agent
+            </span>
+            <Icon name="arrow" size={14} />
+            <span>
+              <Icon name="workflows" size={16} /> Workflow
+            </span>
+          </div>
         </div>
-        <ul className="foundation-list">
-          <li>Workspace cá nhân và nhóm</li>
-          <li>Session phía server + CSRF</li>
-          <li>Tenant boundary ở backend</li>
-        </ul>
+        <div className="login-footnote">
+          <span className="status-dot status-dot--live" /> Flowvia Lite · Your
+          agents. Your workflows.
+        </div>
       </section>
 
       <section className="login-card" aria-label="Đăng nhập Flowvia">
-        <p className="eyebrow">Development demo</p>
-        <h2>Đăng nhập</h2>
-        <p className="muted">
-          Dữ liệu demo là dữ liệu giả. Không dùng mật khẩu này ngoài môi trường
-          local.
-        </p>
+        <div className="login-card-inner">
+          <p className="eyebrow">Workspace access</p>
+          <h2>Welcome back</h2>
+          <p className="muted">Sign in to your Flowvia workspace.</p>
 
-        {error ? <div className="form-error">{error}</div> : null}
+          {error ? <div className="form-error">{error}</div> : null}
 
-        <form onSubmit={submit}>
-          <label>
-            Email
-            <input
-              autoComplete="username"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={busy}
-            />
-          </label>
+          <form onSubmit={submit}>
+            <label>
+              Email
+              <input
+                autoComplete="username"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                autoComplete="current-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                disabled={busy}
+              />
+            </label>
+            <button className="primary-button" type="submit" disabled={busy}>
+              {busy ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
 
-          <label>
-            Mật khẩu
-            <input
-              autoComplete="current-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={busy}
-            />
-          </label>
-
-          <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Đang đăng nhập…' : 'Đăng nhập'}
-          </button>
-        </form>
-
-        {import.meta.env.DEV ? (
-          <div className="demo-credentials">
-            <strong>Tài khoản owner local</strong>
-            <code>owner@flowvia.local</code>
-            <code>FlowviaOwner123!</code>
-          </div>
-        ) : null}
+          {import.meta.env.DEV ? (
+            <div className="demo-credentials">
+              <span>Development account</span>
+              <code>owner@flowvia.local</code>
+              <code>FlowviaOwner123!</code>
+            </div>
+          ) : null}
+        </div>
       </section>
     </main>
-  )
+  );
 }
